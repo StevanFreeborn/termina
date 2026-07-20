@@ -158,6 +158,41 @@ public class StyledWordWrapperTests
         Assert.Equal("C", wrapped[2].ToPlainText());
     }
 
+    [Fact]
+    public void WrapLine_WithHangingIndent_IndentsContinuationLines()
+    {
+        var line = new StyledLine
+        {
+            HangingIndent = 8
+        };
+        line.Append(new StyledSegment("[12:40] [MOD] Fossabot: poffHyper poffTrain Hype Train LEVEL 4! Progress: 21% towards Level 5!", TextStyle.Default));
+
+        var wrapped = StyledWordWrapper.WrapLine(line, 45);
+
+        Assert.True(wrapped.Count >= 2);
+        Assert.Equal("[12:40] [MOD] Fossabot: poffHyper poffTrain", wrapped[0].ToPlainText());
+
+        // Continuation lines must start with 8 spaces
+        Assert.StartsWith("        ", wrapped[1].ToPlainText());
+    }
+
+    [Fact]
+    public void WrapLine_WithHangingIndent_LongWord_BreaksWithIndent()
+    {
+        var line = new StyledLine
+        {
+            HangingIndent = 4
+        };
+        line.Append(new StyledSegment("Hello Supercalifragilisticexpialidocious", TextStyle.Default));
+
+        var wrapped = StyledWordWrapper.WrapLine(line, 14);
+
+        Assert.True(wrapped.Count >= 2);
+        Assert.Equal("Hello", wrapped[0].ToPlainText());
+        // Continuation lines should have 4 leading spaces
+        Assert.StartsWith("    ", wrapped[1].ToPlainText());
+    }
+
     private static StyledLine CreateLine(string text, Color color)
     {
         var line = new StyledLine();
