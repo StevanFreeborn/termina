@@ -239,6 +239,15 @@ public class WindowedStreamBuffer : IStreamingTextBuffer
         }
     }
 
+    /// <inheritdoc />
+    public void SetHangingIndent(int indent)
+    {
+        lock (_lock)
+        {
+            _currentStyledLine.HangingIndent = Math.Max(0, indent);
+        }
+    }
+
     private void EnqueueLine(StyledLine line)
     {
         _styledLines.Enqueue(line);

@@ -294,6 +294,11 @@ public sealed class StyledLine
     }
 
     /// <summary>
+    /// Number of leading space columns to indent wrapped continuation lines (lines 2+).
+    /// </summary>
+    public int HangingIndent { get; set; }
+
+    /// <summary>
     /// Creates a deep copy of this line.
     /// </summary>
     /// <returns>A new StyledLine with the same content.</returns>
@@ -305,6 +310,7 @@ public sealed class StyledLine
             clone._segments.Add(segment);
         }
         clone._length = _length;
+        clone.HangingIndent = HangingIndent;
         return clone;
     }
 

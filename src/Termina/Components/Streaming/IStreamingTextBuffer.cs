@@ -114,4 +114,10 @@ public interface IStreamingTextBuffer
     /// Gets all raw styled lines (unwrapped) in the buffer.
     /// </summary>
     IReadOnlyList<StyledLine> GetAllStyledLines();
+
+    /// <summary>
+    /// Sets the hanging indent (in columns) for the current line being appended.
+    /// </summary>
+    /// <param name="indent">Number of columns to indent continuation lines.</param>
+    void SetHangingIndent(int indent);
 }

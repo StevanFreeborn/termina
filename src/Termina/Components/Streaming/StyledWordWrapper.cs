@@ -50,44 +50,65 @@ public static class StyledWordWrapper
         var currentLine = new StyledLine();
         var currentWidth = 0;
 
+        var indent = Math.Max(0, Math.Min(line.HangingIndent, width - 1));
+
+        void StartContinuationLine()
+        {
+            result.Add(currentLine);
+            currentLine = new StyledLine();
+            if (indent > 0)
+            {
+                currentLine.Append(new StyledSegment(new string(' ', indent), TextStyle.Default));
+            }
+            currentWidth = indent;
+        }
+
         // Split into styled words
         var words = SplitIntoStyledWords(line);
 
         foreach (var word in words)
         {
             var wordWidth = word.ColumnCount;
+            var maxLineCapacity = result.Count == 0 ? width : (width - indent);
 
-            // If word itself is longer than width, break it
-            if (wordWidth > width)
+            // If word itself is longer than max capacity for a line, break it
+            if (wordWidth > maxLineCapacity)
             {
-                // Flush current line if it has content
-                if (currentWidth > 0)
+                // Flush current line if it has content beyond indent
+                var hasContent = result.Count == 0 ? currentWidth > 0 : currentWidth > indent;
+                if (hasContent)
                 {
-                    result.Add(currentLine);
-                    currentLine = new StyledLine();
-                    currentWidth = 0;
+                    StartContinuationLine();
                 }
 
                 // Break long word into chunks while preserving styles
                 var remaining = word;
-                while (remaining.ColumnCount > width)
+                while (remaining.ColumnCount > (result.Count == 0 ? width : (width - indent)))
                 {
-                    var chunk = remaining.SliceByColumns(0, width);
+                    var chunkLimit = result.Count == 0 ? width : (width - indent);
+                    var chunk = remaining.SliceByColumns(0, chunkLimit);
                     if (chunk.IsEmpty)
                         break;
 
-                    result.Add(chunk);
+                    foreach (var segment in chunk.Segments)
+                    {
+                        currentLine.Append(segment);
+                    }
+                    StartContinuationLine();
                     remaining = remaining.SliceByColumns(chunk.ColumnCount, int.MaxValue / 2);
                 }
 
-                // Remainder becomes start of new line
+                // Remainder becomes start of current line
                 if (!remaining.IsEmpty)
                 {
-                    currentLine = remaining;
-                    currentWidth = remaining.ColumnCount;
+                    foreach (var segment in remaining.Segments)
+                    {
+                        currentLine.Append(segment);
+                    }
+                    currentWidth = currentLine.ColumnCount;
                 }
             }
-            else if (currentWidth == 0)
+            else if (currentWidth == 0 || (result.Count > 0 && currentWidth == indent))
             {
                 // Start of line - add word directly
                 foreach (var segment in word.Segments)
@@ -95,6 +116,10 @@ public static class StyledWordWrapper
                     currentLine.Append(segment);
                 }
                 currentWidth = wordWidth;
+                if (result.Count > 0)
+                {
+                    currentWidth = currentLine.ColumnCount;
+                }
             }
             else if (currentWidth + 1 + wordWidth <= width)
             {
@@ -115,19 +140,19 @@ public static class StyledWordWrapper
             }
             else
             {
-                // Word doesn't fit, start new line
-                result.Add(currentLine);
-                currentLine = new StyledLine();
+                // Word doesn't fit, start new continuation line
+                StartContinuationLine();
                 foreach (var segment in word.Segments)
                 {
                     currentLine.Append(segment);
                 }
-                currentWidth = wordWidth;
+                currentWidth = currentLine.ColumnCount;
             }
         }
 
-        // Flush remaining content
-        if (currentWidth > 0)
+        // Flush remaining content if it has content beyond indent
+        var hasFinalContent = result.Count == 0 ? currentWidth > 0 : currentWidth > indent;
+        if (hasFinalContent)
         {
             result.Add(currentLine);
         }

@@ -198,6 +198,15 @@ public sealed class StreamingTextNode : LayoutNode, IInvalidatingNode, IScrollab
     }
 
     /// <summary>
+    /// Sets the hanging indent (in columns) for the current line being appended.
+    /// </summary>
+    /// <param name="indent">Number of columns to indent continuation lines.</param>
+    public void SetHangingIndent(int indent)
+    {
+        _buffer.SetHangingIndent(indent);
+    }
+
+    /// <summary>
     /// Appends a tracked text segment that can be removed or replaced later.
     /// The caller provides the ID to reference this segment.
     /// If the segment is a <see cref="BlockSegment"/>, it will start on a new line.

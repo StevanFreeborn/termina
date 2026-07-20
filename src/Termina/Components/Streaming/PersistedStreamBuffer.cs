@@ -356,6 +356,15 @@ public class PersistedStreamBuffer : IStreamingTextBuffer
         return Math.Max(0, totalWrapped - 1); // Can scroll up to see first line at bottom
     }
 
+    /// <inheritdoc />
+    public void SetHangingIndent(int indent)
+    {
+        lock (_lock)
+        {
+            _currentStyledLine.HangingIndent = Math.Max(0, indent);
+        }
+    }
+
     private IEnumerable<StyledLine> GetAllStyledLinesInternal()
     {
         foreach (var line in _styledLines)
